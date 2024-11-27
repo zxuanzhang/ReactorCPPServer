@@ -3,8 +3,8 @@
 #include<stdlib.h>
 #include<stdio.h>
 #include<unistd.h>
+#include<sys/socket.h>
 #define NUM 520
-
 static void* EpollInit();
 static int EpollAdd(struct EventLoop* evloop, struct Channel* channel); //evloop里面的data存数据，channel存epfd和待添加的文件描述符
 static int EpollRemove(struct EventLoop* evloop, struct Channel* channel);
@@ -48,7 +48,6 @@ int EpollAdd(EventLoop* evloop, Channel* channel)
 	}
 	return ret;
 }
-
 int EpollRemove(EventLoop* evloop, Channel* channel)
 {
 	int ret = EpollCtl(channel, evloop, EPOLL_CTL_DEL);
@@ -83,10 +82,10 @@ int EpollDispatch(EventLoop* evloop, int timeout)
 			continue;
 		}
 		if (events&EPOLLIN) {
-
+			eventActivate(fd, evloop, Read);
 		}
 		if (events&EPOLLOUT) {
-
+			eventActivate(fd, evloop, Write);
 		}
 	}
 	return 0;

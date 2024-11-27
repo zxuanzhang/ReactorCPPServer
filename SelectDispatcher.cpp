@@ -107,12 +107,12 @@ static int selectDispatch(struct EventLoop* evLoop, int timeout)
     {
         if (FD_ISSET(i, &rdtmp))
         {
-          
+            eventActivate(i, evLoop, Read);
         }
 
         if (FD_ISSET(i, &wrtmp))
         {
-            
+            eventActivate(i, evLoop, Write);
         }
     }
     return 0;
