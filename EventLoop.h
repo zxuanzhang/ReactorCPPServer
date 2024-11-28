@@ -45,3 +45,7 @@ int EventLoopRun(EventLoop* evLoop);
 int eventActivate(int fd,struct EventLoop*evloop,int event); 
 int eventLoopAddTask(struct EventLoop* evloop, int type, struct Channel* channel);
 int eventLoopProcess(struct EventLoop* evloop);
+int eventLoopAdd(struct EventLoop* evloop,struct Channel*channel);
+int eventLoopRemove(struct EventLoop* evloop, struct Channel* channel);
+int eventLoopModify(struct EventLoop* evloop, struct Channel* channel);
+int destroyChannel(struct EventLoop* evloop, struct Channel* channel);

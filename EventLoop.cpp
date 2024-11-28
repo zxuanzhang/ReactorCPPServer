@@ -50,7 +50,7 @@ struct EventLoop* EventLoopInitex(char* ThreadName)
 	return evLoop;
 }
 
-int EventLoopRun(EventLoop* evLoop)
+int EventLoopRun(struct EventLoop* evLoop)
 {
 	assert(evLoop != NULL);
 	if (evLoop->pid != pthread_self()) {
@@ -78,7 +78,7 @@ int eventActivate(int fd, struct EventLoop* evloop, int event)
 	return 0;
 }
 
-int eventLoopAddTask(EventLoop* evloop, int type, Channel* channel)
+int eventLoopAddTask(struct EventLoop* evloop, int type,struct Channel* channel)
 {
 	struct ChannelElement* node = (struct ChannelElement*)malloc(sizeof(struct ChannelElement));
 	node->channel = channel;
@@ -96,20 +96,20 @@ int eventLoopAddTask(EventLoop* evloop, int type, Channel* channel)
 	return 0;
 }
 
-int eventLoopProcess(EventLoop* evloop)
+int eventLoopProcess(struct EventLoop* evloop)
 {
 	pthread_mutex_lock(&evloop->mutex);
 	struct TaskQueue* taskqueue = evloop->taskqueue;
 	while (taskqueue->head != NULL) {
 		struct Channel* channel = taskqueue->head->channel;
 		if (taskqueue->head->type == ADD) {
-
+			eventLoopAdd(evloop, channel);
 		}
 		if (taskqueue->head->type == DELETE) {
-
+			eventLoopRemove(evloop, channel);
 		}
 		if (taskqueue->head->type == MODIFY) {
-
+			eventLoopModify(evloop, channel);
 		}
 		struct ChannelElement* tmp = taskqueue->head;
 		taskqueue->head = taskqueue->head->next;
@@ -119,6 +119,53 @@ int eventLoopProcess(EventLoop* evloop)
 	pthread_mutex_unlock(&evloop->mutex);
 	return 0;
 }
+
+int eventLoopAdd(struct EventLoop* evloop,struct Channel* channel)
+{
+	int fd = channel->fd;
+	struct ChannelMap* channelmap = evloop->channelmap;
+	if (fd >= channelmap->size) {
+		if (!makeMapRoom(channelmap, fd, sizeof(struct Channel*))) {
+			return -1;
+		}
+	}
+	if (channelmap->list[fd] == NULL) {
+		channelmap->list[fd] = channel;
+		evloop->dispatcher->add(evloop, channel);
+	}
+	return 0;
+}
+
+int eventLoopRemove(struct EventLoop* evloop,struct Channel* channel)
+{
+	int fd = channel->fd;
+	struct ChannelMap* channelmap = evloop->channelmap;
+	if (fd >= channelmap->size) {
+		return -1;
+	}
+	int ret = evloop->dispatcher->remove(evloop, channel);
+	return ret;
+}
+
+int eventLoopModify(struct EventLoop* evloop,struct Channel* channel)
+{
+	int fd = channel->fd;
+	struct ChannelMap* channelmap = evloop->channelmap;
+	if (channelmap->list[fd]==NULL) {
+		return -1;
+	}
+	int ret = evloop->dispatcher->modify(evloop, channel);
+	return ret;
+}
+
+int destroyChannel(struct EventLoop* evloop,struct Channel* channel)
+{
+	evloop->channelmap->list[channel->fd] = NULL;
+	close(channel->fd);
+	free(channel);
+	return 0;
+}
+
 
 
 
