@@ -508,7 +508,7 @@ void HttpRequest::sendFile(string fileName, Buffer* sendBuf, int socket)
         char buf[1024];
         int len = read(fd, buf, sizeof buf);
         if (len > 0) {
-            sendBuf->appendDataString(buf);
+            sendBuf->appendDataString(buf,len);
 #ifndef SEND_DATA_AUTO
             sendBuf->sendData(socket);
 #endif
