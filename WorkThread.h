@@ -1,16 +1,29 @@
 #pragma once
-#include<pthread.h>
+#include<thread>
+#include<mutex>
+#include<condition_variable>
 #include"EventLoop.h"
+using namespace std;
 
-struct WorkThread {
-	pthread_t pid;
-	char name[24];
-	pthread_mutex_t mutex;
-	pthread_cond_t cond;
-	struct EventLoop* evloop;
+class WorkThread {
+private:
+	thread::id threadId;
+	string name;
+	mutex m_mutex;
+	condition_variable cond;
+	EventLoop* evloop;
+	thread* m_thread;
+public:
+	WorkThread(int index);
+	~WorkThread();
+	void run();
+	void subRun();
+	inline EventLoop* getEventLoop() {
+		return evloop;
+	}
 };
-int WorkThreadInit(struct WorkThread* thread, int index);
-void WorkThreadRun(struct WorkThread* thread);
+//int WorkThreadInit(struct WorkThread* thread, int index);
+//void WorkThreadRun(struct WorkThread* thread);
 
 
 
